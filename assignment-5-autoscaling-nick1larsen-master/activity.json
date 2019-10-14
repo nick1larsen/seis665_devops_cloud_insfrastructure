@@ -1,0 +1,48 @@
+{
+    "Activities": [
+        {
+            "Description": "Launching a new EC2 instance: i-03dbb8a552316110c", 
+            "AutoScalingGroupName": "wordpress-web-group", 
+            "ActivityId": "d055b704-8e3f-3f6c-4106-f425e01a76c6", 
+            "Details": "{\"Subnet ID\":\"subnet-0c73eb42351eb8cc0\",\"Availability Zone\":\"us-west-1c\"}", 
+            "StartTime": "2019-10-12T18:03:16.303Z", 
+            "Progress": 100, 
+            "EndTime": "2019-10-12T18:03:48Z", 
+            "Cause": "At 2019-10-12T18:03:14Z an instance was started in response to a difference between desired and actual capacity, increasing the capacity from 1 to 2.", 
+            "StatusCode": "Successful"
+        }, 
+        {
+            "Description": "Terminating EC2 instance: i-003b8064b337fffc1", 
+            "AutoScalingGroupName": "wordpress-web-group", 
+            "ActivityId": "7f75b704-8c41-8776-0c2a-0e28384adb5d", 
+            "Details": "{\"Subnet ID\":\"subnet-0c73eb42351eb8cc0\",\"Availability Zone\":\"us-west-1c\"}", 
+            "StartTime": "2019-10-12T18:02:43.681Z", 
+            "Progress": 100, 
+            "EndTime": "2019-10-12T18:08:02Z", 
+            "Cause": "At 2019-10-12T18:02:43Z an instance was taken out of service in response to a EC2 health check indicating it has been terminated or stopped.", 
+            "StatusCode": "Successful"
+        }, 
+        {
+            "Description": "Launching a new EC2 instance: i-0f86dc88e8b8f0d25", 
+            "AutoScalingGroupName": "wordpress-web-group", 
+            "ActivityId": "bb95b6f5-6113-f84c-0efd-b0081a76d2ee", 
+            "Details": "{\"Subnet ID\":\"subnet-02813e07c39e832c0\",\"Availability Zone\":\"us-west-1a\"}", 
+            "StartTime": "2019-10-12T00:22:21.694Z", 
+            "Progress": 100, 
+            "EndTime": "2019-10-12T00:22:53Z", 
+            "Cause": "At 2019-10-12T00:22:19Z an instance was started in response to a difference between desired and actual capacity, increasing the capacity from 0 to 2.  At 2019-10-12T00:22:17Z a user request created an AutoScalingGroup changing the desired capacity from 0 to 2.", 
+            "StatusCode": "Successful"
+        }, 
+        {
+            "Description": "Launching a new EC2 instance: i-003b8064b337fffc1", 
+            "AutoScalingGroupName": "wordpress-web-group", 
+            "ActivityId": "32f5b6f5-6111-9321-4090-7653c8020d96", 
+            "Details": "{\"Subnet ID\":\"subnet-0c73eb42351eb8cc0\",\"Availability Zone\":\"us-west-1c\"}", 
+            "StartTime": "2019-10-12T00:22:21.540Z", 
+            "Progress": 100, 
+            "EndTime": "2019-10-12T00:22:53Z", 
+            "Cause": "At 2019-10-12T00:22:19Z an instance was started in response to a difference between desired and actual capacity, increasing the capacity from 0 to 2.  At 2019-10-12T00:22:17Z a user request created an AutoScalingGroup changing the desired capacity from 0 to 2.", 
+            "StatusCode": "Successful"
+        }
+    ]
+}
