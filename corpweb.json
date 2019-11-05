@@ -1,0 +1,362 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Parameters": {
+        "InstanceType": {
+            "Description": "Server instance type",
+            "Type": "String",
+            "Default": "t2.micro",
+            "AllowedValues": [
+                "t2.micro",
+                "t2.small"
+            ],
+            "ConstraintDescription": "Must be a valid EC2 type."
+        },
+        "KeyPair": {
+            "Description": "Sever key-pair name for the EC2 instances",
+            "Type": "AWS::EC2::KeyPair::KeyName",
+            "ConstraintDescription": "Must be a key-pair"
+        },
+        "YourIp": {
+            "Description": "The current CIDR IP address of your workstation (x.x.x.x/32).",
+            "Type": "String"
+        }
+    },
+    "Resources": {
+        "engineeringVpc": {
+            "Type": "AWS::EC2::VPC",
+            "Properties": {
+                "EnableDnsSupport": "true",
+                "EnableDnsHostnames": "true",
+                "CidrBlock": "10.0.0.0/18",
+                "Tags": [
+                    {
+                        "Key": "Environment",
+                        "Value": "Test"
+                    }
+                ]
+            }
+        },
+        "InternetGateway": {
+            "Type": "AWS::EC2::InternetGateway",
+            "Properties": {}
+        },
+        "VPCGatewayAttachment": {
+            "Type": "AWS::EC2::VPCGatewayAttachment",
+            "Properties": {
+                "InternetGatewayId": {
+                    "Ref": "InternetGateway"
+                },
+                "VpcId": {
+                    "Ref": "engineeringVpc"
+                }
+            }
+        },
+        "PublicRouteTable": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "engineeringVpc"
+                }
+            }
+        },
+        "Listener": {
+            "Type": "AWS::ElasticLoadBalancingV2::Listener",
+            "Properties": {
+              "DefaultActions": [{
+                "Type": "forward",
+                "TargetGroupArn": { "Ref": "engineeringWebservers" }
+                }],
+                "LoadBalancerArn": { "Ref": "engineeringLB" },
+                "Port": "80",
+                "Protocol": "HTTP"
+              }
+            },
+        "PublicRoute": {
+            "Type": "AWS::EC2::Route",
+            "Properties": {
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "RouteTableId": {
+                    "Ref": "PublicRouteTable"
+                },
+                "GatewayId": {
+                    "Ref": "InternetGateway"
+                }
+            },
+            "DependsOn": [
+                "InternetGateway"
+            ]
+        },
+        "publicSubnet1": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "engineeringVpc"
+                },
+                "MapPublicIpOnLaunch": "true",
+                "CidrBlock": "10.0.0.0/24",
+                "AvailabilityZone": {
+                    "Fn::Select": [
+                        "0",
+                        {
+                            "Fn::GetAZs": {
+                                "Ref": "AWS::Region"
+                            }
+                        }
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "publicSubnet1"
+                    }
+                ]
+            }
+        },
+        "publicSubnet2": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "engineeringVpc"
+                },
+                "MapPublicIpOnLaunch": "true",
+                "CidrBlock": "10.0.1.0/24",
+                "AvailabilityZone": {
+                    "Fn::Select": [
+                        "1",
+                        {
+                            "Fn::GetAZs": {
+                                "Ref": "AWS::Region"
+                            }
+                        }
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "publicSubnet2"
+                    }
+                ]
+            }
+        },
+        "PublicSubnet1RTassoc": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "PublicRouteTable"
+                },
+                "SubnetId": {
+                    "Ref": "publicSubnet1"
+                }
+            }
+        },
+        "PublicSubnet2RTassoc": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "PublicRouteTable"
+                },
+                "SubnetId": {
+                    "Ref": "publicSubnet2"
+                }
+            }
+        },
+        "web1": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "InstanceType": {
+                    "Ref": "InstanceType"
+                },
+                "ImageId": "ami-3ea13f29",
+                "KeyName": {
+                    "Ref": "KeyPair"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "webserver1"
+                    }
+                ],
+                "NetworkInterfaces": [
+                    {
+                        "AssociatePublicIpAddress": "True",
+                        "DeviceIndex": "0",
+                        "SubnetId": {
+                            "Ref": "publicSubnet1"
+                        },
+                        "GroupSet": [
+                            {
+                                "Ref": "webserversSG"
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        "web2": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "InstanceType": {
+                    "Ref": "InstanceType"
+                },
+                "ImageId": "ami-3ea13f29",
+                "KeyName": {
+                    "Ref": "KeyPair"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "webserver2"
+                    }
+                ],
+                "NetworkInterfaces": [
+                    {
+                        "AssociatePublicIpAddress": "True",
+                        "DeviceIndex": "0",
+                        "SubnetId": {
+                            "Ref": "publicSubnet2"
+                        },
+                        "GroupSet": [
+                            {
+                                "Ref": "webserversSG"
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        "engineeringlbSG": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "engineeringVpc"
+                },
+                "GroupDescription": "Security group rules for webserver host.",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "80",
+                        "ToPort": "80",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ]
+            }
+        },
+        "engineeringLB": {
+            "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+            "Properties": {
+                "LoadBalancerAttributes": [
+                    {
+                        "Key": "idle_timeout.timeout_seconds",
+                        "Value": "20"
+                    }
+                ],
+                "Scheme": "internet-facing",
+                "SecurityGroups": [
+                    {
+                        "Ref": "engineeringlbSG"
+                    }
+                ],
+                "Subnets": [
+                    {
+                        "Ref": "publicSubnet1"
+                    },
+                    {
+                        "Ref": "publicSubnet2"
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "engineeringLB"
+                    }
+                ]
+            }
+        },
+        "engineeringWebservers": {
+            "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+            "Properties": {
+                "HealthCheckIntervalSeconds": 30,
+                "HealthCheckPath": "/",
+                "HealthCheckProtocol": "HTTP",
+                "HealthCheckTimeoutSeconds": 10,
+                "HealthyThresholdCount": 4,
+                "Matcher": {
+                    "HttpCode": "200"
+                },
+                "Name": "MyTarget",
+                "Port": 80,
+                "Protocol": "HTTP",
+                "TargetGroupAttributes": [
+                    {
+                        "Key": "deregistration_delay.timeout_seconds",
+                        "Value": "20"
+                    }
+                ],
+                "Targets": [
+                    {
+                        "Id": {
+                            "Ref": "web1"
+                        },
+                        "Port": 80
+                    },
+                    {
+                        "Id": {
+                            "Ref": "web2"
+                        },
+                        "Port": 80
+                    }
+                ],
+                "UnhealthyThresholdCount": 3,
+                "VpcId": {
+                    "Ref": "engineeringVpc"
+                }
+            }
+        },
+        "webserversSG": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "engineeringVpc"
+                },
+                "GroupDescription": "Security group rules for webserver host",
+                "SecurityGroupIngress": [
+                    {
+                        "SourceSecurityGroupId": {
+                            "Ref": "engineeringlbSG"
+                        },
+                        "FromPort": "80",
+                        "IpProtocol": "tcp",
+                        "ToPort": "80"
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "YourIp"
+                        },
+                        "FromPort": "22",
+                        "IpProtocol": "tcp",
+                        "ToPort": "22"
+                    }
+                ]
+            }
+        }
+    },
+    "Outputs": {
+        "weburl": {
+            "Value": {
+                "Fn::Join": [
+                    "",
+                    [
+                        "http://",
+                        {
+                            "Fn::GetAtt": [
+                                "engineeringLB",
+                                "DNSName"
+                            ]
+                        }
+                    ]
+                ]
+            },
+            "Description": "Webserver URL"
+        }
+    }
+}
