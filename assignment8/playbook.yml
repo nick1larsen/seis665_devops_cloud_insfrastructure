@@ -1,0 +1,51 @@
+---
+- hosts: web1
+  remote_user: ec2-user
+  become: yes
+  become_method: sudo
+  tasks:
+  - name: upgrade all packages
+    yum:
+     name: '*'
+     state: latest
+  - name: install lamp
+    command: amazon-linux-extras install -y lamp-mariadb10.2-php7.2 php7.2
+  - name: install apache
+    yum:
+     name: httpd
+     state: present
+  - name: ensure apache is at the latest version
+    yum:
+     name: httpd
+     state: latest
+  - name: ensure apache is started
+    service:
+      name: httpd
+      state: started
+
+- hosts: web1
+  remote_user: ec2-user
+  become: yes
+  become_method: sudo
+  vars:
+    database_name:  '{{ lookup("env", "DATABASE_NAME") }}'
+    database_username:  '{{ lookup("env", "DATABASE_USERNAME") }}'
+    database_password:  '{{ lookup("env", "DATABASE_PASSWORD") }}'
+    database_endpoint:  '{{ lookup("env", "DATABASE_ENDPOINT") }}'
+  tasks:
+  - name: download wordpress software
+    get_url:
+      url: https://wordpress.org/latest.tar.gz
+      dest: /var/www/wp.tar.gz
+      mode: 'u+rwx'
+  - name: unarchive wordpress software
+    unarchive:
+      src: /var/www/wp.tar.gz
+      dest: /var/www/html
+      remote_src: yes
+  - name: create wordpress config
+    template:
+      src: /home/ec2-user/ansible_templates/wp-config.j2
+      dest: /var/www/html/wordpress/wp-config.php
+
+      
